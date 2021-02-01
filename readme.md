@@ -1,6 +1,7 @@
 # LUR 纯c代码实现
 ## 代码目录
-- .
+- 
+```
 ├── incl  
 │   ├── HashTable.h
 │   ├── leak_detector.h
@@ -13,6 +14,8 @@
     ├── HashTable.c
     ├── leak_detector.c
     └── lru.c
+```
+
 - incl：头文件
 - lib：动态库生成文件
 - src：函数接口实现文件
