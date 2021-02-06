@@ -4,12 +4,12 @@
 #include "HashTable.h"
 typedef struct Node Node;
 typedef struct _Lrucache Lrucache;
-typedef int (*fptrGet)(Lrucache*, const int);
-typedef void (*fptrPut)(Lrucache*, const int,const int);
+typedef int (*fptrGet)(Lrucache*, void*);
+typedef void (*fptrPut)(Lrucache*, void*,void*);
 typedef void (*fptrDelete)(Lrucache*);
 struct Node{
-    int key;
-    int value;
+    void* key;
+    void* value;
     Node* pre;
     Node* next;
 };
@@ -24,9 +24,9 @@ struct  _Lrucache{
     fptrPut put;
     fptrDelete lrudelete;
 };
-Lrucache* LRUCache(const int capacity); //构造函数
-int getValue(Lrucache* this, const int key);
-void putValue(Lrucache* this, const int key, const int value);
+Lrucache* LRUCache(const int capacity,int(*hashcode)(void*)); //构造函数
+int getValue(Lrucache* this, void* key);
+void putValue(Lrucache* this, void* key, void* value);
 void deleteLRUCache(Lrucache* this);//析构函数
 void pushFront(Lrucache* this,Node* p);
 #endif // _LRU_H_

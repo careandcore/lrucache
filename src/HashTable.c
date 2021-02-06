@@ -20,6 +20,7 @@ struct kv
 struct HashTable
 {
     struct kv ** table;
+	int(*hashcode)(void*);
 };
 
 /* constructor of struct kv */
@@ -43,17 +44,17 @@ static void free_kv(struct kv* kv)
     }
 }
 /* the classic Times33 hash function */
-static unsigned int hash_33(char* key)
-{
-    unsigned int hash = 0;
-    while (*key) {
-        hash = (hash << 5) + hash + *key++;
-    }
-    return hash;
-}
+//static unsigned int hash_33(char* key)
+//{
+//    unsigned int hash = 0;
+//    while (*key) {
+//        hash = (hash << 5) + hash + *key++;
+//    }
+//    return hash;
+//}
 
 /* new a HashTable instance */
-HashTable* hash_table_new()
+HashTable* hash_table_new(int(*hashcode)(void*))
 {
     HashTable* ht = MALLOC(sizeof(HashTable));
     if (NULL == ht) {
@@ -66,7 +67,11 @@ HashTable* hash_table_new()
         return NULL;
     }
     memset(ht->table, 0, sizeof(struct kv*) * TABLE_SIZE);
-
+	ht->hashcode = hashcode;
+	if (ht->hashcode == NULL) {
+		hash_table_delete(ht);
+		return NULL;
+	}
     return ht;
 }
 /* delete a HashTable instance */
@@ -92,9 +97,9 @@ void hash_table_delete(HashTable* ht)
 }
 
 /* insert or update a value indexed by key */
-int hash_table_put2(HashTable* ht, char* key, void* value, void(*free_value)(void*))
+int hash_table_put2(HashTable* ht, void* key, void* value, void(*free_value)(void*))
 {
-    int i = hash_33(key) % TABLE_SIZE;
+    unsigned int i = ht->hashcode(key) % TABLE_SIZE;
     struct kv* p = ht->table[i];
     struct kv* prep = p;
 
@@ -112,20 +117,20 @@ int hash_table_put2(HashTable* ht, char* key, void* value, void(*free_value)(voi
     }
 
     if (p == NULL) {/* if key has not been stored, then add it */
-        char* kstr = MALLOC(strlen(key) + 1);
-        if (kstr == NULL) {
-            return -1;
-        }
+        //char* kstr = MALLOC(strlen(key) + 1);
+        //if (kstr == NULL) {
+        //    return -1;
+        //}
         struct kv * kv = MALLOC(sizeof(struct kv));
         if (NULL == kv) {
-            FREE(kstr);
-            kstr = NULL;
+            //FREE(kstr);
+            //kstr = NULL;
             return -1;
         }
         init_kv(kv);
         kv->next = NULL;
-        strcpy(kstr, key);
-        kv->key = kstr;
+        //strcpy(kstr, key);
+        kv->key = key;
         kv->value = value;
         kv->free_value = free_value;
 
@@ -140,9 +145,9 @@ int hash_table_put2(HashTable* ht, char* key, void* value, void(*free_value)(voi
 }
 
 /* get a value indexed by key */
-void* hash_table_get(HashTable* ht, char* key)
+void* hash_table_get(HashTable* ht, void* key)
 {
-    int i = hash_33(key) % TABLE_SIZE;
+    int i = ht->hashcode(key) % TABLE_SIZE;
     struct kv* p = ht->table[i];
     while (p) {
         if (strcmp(key, p->key) == 0) {
@@ -154,9 +159,9 @@ void* hash_table_get(HashTable* ht, char* key)
 }
 
 /* remove a value indexed by key */
-void hash_table_rm(HashTable* ht, char* key)
+void hash_table_rm(HashTable* ht, void* key)
 {
-    int i = hash_33(key) % TABLE_SIZE;
+    int i = ht->hashcode(key) % TABLE_SIZE;
 
     struct kv* p = ht->table[i];
     struct kv* prep = p;

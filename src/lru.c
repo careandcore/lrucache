@@ -8,7 +8,7 @@
 #define STRING_SIZE 100
 void pushFront(Lrucache* this,Node* p);
 
-Lrucache* LRUCache(const int capacity){
+Lrucache* LRUCache(const int capacity,int(*hashcode)(void*)){
     Lrucache* pObj = NULL;
     pObj = (Lrucache*)MALLOC(sizeof(Lrucache));
     if (pObj == NULL){
@@ -18,63 +18,56 @@ Lrucache* LRUCache(const int capacity){
 	pObj -> count = 0;
     pObj -> get = getValue;
     pObj -> put = putValue;
-    pObj -> ht = hash_table_new();
+    pObj -> ht = hash_table_new(hashcode);
     pObj -> lrudelete = deleteLRUCache;
 	pObj -> cacheHead = NULL;
 	pObj -> cacheTail = NULL;
     return pObj;
 }
-int getValue(Lrucache* this, const int key){
+int getValue(Lrucache* this, void* key){
     if(this->cacheHead == NULL){
         return -1;
     }
-    char skey[STRING_SIZE]="";
-    //itoa(key,skey,10);
-    sprintf(skey,"%d",key);
-    //1¡¢²éÕÒcachelistÖÐµÄÖµ£¬·µ»Ø½ÚµãÎ»ÖÃ
-    Node* it = (Node*)hash_table_get(this -> ht, skey);
+    //1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½cachelistï¿½Ðµï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½Ø½Úµï¿½Î»ï¿½ï¿½
+    Node* it = (Node*)hash_table_get(this -> ht, key);
     if (it == NULL){
-    //1¡¢ Èç¹û½ÚµãÖÐ²»´æÔÚÕâ¸öÖµ£¬Ôò·µ»Ø-1
+    //1ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½Ð²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ò·µ»ï¿½-1
         return -1;
     }
     else{
-        //2¡¢ Èç¹ûÕÒµ½½ÚµãÖÐµÄÖµ£¬ÄÃµ½¸Ã½ÚµãµÄÖ¸Õë
+        //2ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½Úµï¿½ï¿½Ðµï¿½Öµï¿½ï¿½ï¿½Ãµï¿½ï¿½Ã½Úµï¿½ï¿½Ö¸ï¿½ï¿½
         Node* p = it;
-        //2¡¢½«¸Ã½Úµã·ÅÖÃÔÚÍ·²¿
+        //2ï¿½ï¿½ï¿½ï¿½ï¿½Ã½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½
         pushFront(this,p);
     }
-    //3¡¢·µ»Øcachelist->value
+    //3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½cachelist->value
     return this -> cacheHead->value;
 }
-void putValue(Lrucache* this, const int key, const int value){
-	char skey[STRING_SIZE] = "";
-    //itoa(key,skey,10);
-    sprintf(skey,"%d",key);
-    if (this -> cacheHead == NULL){//Èç¹ûÁ´±íÎª¿Õ£¬ÔòÖ±½Ó·ÅÔÚÁ´±íµÄÍ·²¿
+void putValue(Lrucache* this, void* key, void* value){//const int
+    if (this -> cacheHead == NULL){//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Õ£ï¿½ï¿½ï¿½Ö±ï¿½Ó·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½
         this -> cacheHead = (Node*)MALLOC(sizeof(Node));
         this -> cacheHead -> key = key;
         this -> cacheHead -> value = value;
         this -> cacheHead -> pre = NULL;
         this -> cacheHead -> next = NULL;
         this -> cacheTail  = this -> cacheHead;
-        hash_table_put2(this -> ht, skey, this -> cacheHead,NULL);
+        hash_table_put2(this -> ht, key, this -> cacheHead,NULL);
         this -> count ++;
     }
-    else{//Èç¹ûÓÐ£¬ÔòÔÚÁ´±íÖÐ²éÕÒ
-        Node* it = (Node*)hash_table_get(this -> ht, skey);
-
+    else{//ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½ï¿½ï¿½
+        Node* it = (Node*)hash_table_get(this -> ht, key);
         if(it == NULL){
-            // Î´ÃüÖÐ
+            // Î´ï¿½ï¿½ï¿½ï¿½
             if (this -> count == this -> size){
-                //cache ÂúÁË
+                //cache ï¿½ï¿½ï¿½ï¿½
                 if(this -> cacheHead == this -> cacheTail && this -> cacheHead != NULL){
-                    //Èç¹ûcache=1Ê±
+                    //ï¿½ï¿½ï¿½cache=1Ê±
                     this -> cacheHead -> key =key;
                     this -> cacheHead -> value = value;
-                    hash_table_put2(this -> ht, skey, this -> cacheHead,NULL);
+                    hash_table_put2(this -> ht, key, this -> cacheHead,NULL);
                 }
                 else{
-                    //Èç¹ûcache>1
+                    //ï¿½ï¿½ï¿½cache>1
                     Node* p = this -> cacheTail;
                     this -> cacheTail -> pre -> next = this -> cacheTail -> next;
                     this -> cacheTail = this -> cacheTail -> pre;
@@ -86,10 +79,10 @@ void putValue(Lrucache* this, const int key, const int value){
 
                     this -> cacheHead -> pre = p;
                     this -> cacheHead = p;
-                    hash_table_put2(this -> ht, skey, this -> cacheHead, NULL);
+                    hash_table_put2(this -> ht, key, this -> cacheHead, NULL);
                 }
             }
-            else{//Î´Âú
+            else{//Î´ï¿½ï¿½
                 Node* p = (Node*)MALLOC(sizeof(Node));
                 p -> key = key;
                 p -> value = value;
@@ -97,12 +90,12 @@ void putValue(Lrucache* this, const int key, const int value){
                 p -> pre = NULL;
                 this -> cacheHead ->pre = p;
                 this -> cacheHead = p;
-                hash_table_put2(this -> ht, skey, this -> cacheHead, NULL);
+                hash_table_put2(this -> ht, key, this -> cacheHead, NULL);
                 this -> count++;
             }
         }
-        else{//1¡¢ÃüÖÐ
-			//2¡¢¼ÓÉÏ ÉèÖÃvalueµÄ·½·¨
+        else{//1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+			//2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½valueï¿½Ä·ï¿½ï¿½ï¿½
             Node* p = it;
             pushFront(this,p);
         }
@@ -135,18 +128,17 @@ void deleteLRUCache(Lrucache* this){
         return ;
     }
     else{
-        printf("releasing the memory \n");
         hash_table_delete(this -> ht);
 		if (this->cacheHead != NULL) {
 			Node* p = this->cacheHead;
 			Node* q = p;
-			while (q) { //ÊÍ·Å½ÚµãÁ´±í
+			while (q) { //ï¿½Í·Å½Úµï¿½ï¿½ï¿½ï¿½ï¿½
 				p = q;
 				q = p->next;
 				FREE(p);
 			}
 		}
-		FREE(this);//ÊÍ·Å¶ÔÏó
-        printf("has released\n");
+		FREE(this);//ï¿½Í·Å¶ï¿½ï¿½ï¿½
+        printf("Has released\n");
     }
 }
